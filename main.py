@@ -13,18 +13,18 @@ app=Flask(__name__)
 
 
 datetoday=date.today().strftime("%m_%d_%y")
-# datetoday2=date.today().strftime("%d-%B-%Y")
+datetoday2=date.today().strftime("%d-%B-%Y")
 
 
 
-#### Initializing VideoCapture object to access WebCam
+# Initializing VideoCapture object to access WebCam
 face_detector = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 try:
     cap = cv2.VideoCapture(1)
 except:
     cap = cv2.VideoCapture(0)
 
-#### If these directories don't exist, create them
+# If these directories don't exist, create them
 if not os.path.isdir('Attendance'):
     os.makedirs('Attendance')
 if not os.path.isdir('static'):
@@ -36,12 +36,10 @@ if f'Attendance-{datetoday}.csv' not in os.listdir('Attendance'):
         f.write('Name,Roll,Time')
 
 
-#### get a number of total registered users
 def totalreg():
     return len(os.listdir('static/faces'))
 
 
-#### extract the face from an image
 def extract_faces(img):
     if img is not None and img.any():
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -53,13 +51,13 @@ def extract_faces(img):
 
 
 
-#### Identify face using ML model
+# Identify face using ML model
 def identify_face(facearray):
     model = joblib.load('static/face_recognition_model.pkl')
     return model.predict(facearray)
 
 
-#### A function which trains the model on all the faces available in faces folder
+# A function which trains the model on all the faces available in faces folder
 def train_model():
     faces = []
     labels = []
@@ -76,7 +74,7 @@ def train_model():
     joblib.dump(knn, 'static/face_recognition_model.pkl')
 
 
-#### Extract info from today's attendance file in attendance folder
+# Extract info from today's attendance file in attendance folder
 def extract_attendance():
     df = pd.read_csv(f'Attendance/Attendance-{datetoday}.csv')
     names = df['Name']
@@ -86,7 +84,7 @@ def extract_attendance():
     return names, rolls, times, l
 
 
-#### Add Attendance of a specific user
+# Add Attendance of a specific user
 def add_attendance(name):
     username = name.split('_')[0]
     userid = name.split('_')[1]
@@ -98,9 +96,8 @@ def add_attendance(name):
             f.write(f'\n{username},{userid},{current_time}')
 
 
-################## ROUTING FUNCTIONS #########################
 
-#### Our main page
+# main page
 @app.route('/')
 def home():
     names, rolls, times, l = extract_attendance()
@@ -108,7 +105,7 @@ def home():
 
 
 
-#### This function will run when we click on Take Attendance Button
+# This function will run when we click on Take Attendance Button
 @app.route('/start', methods=['GET'])
 def start():
     if 'face_recognition_model.pkl' not in os.listdir('static'):
@@ -142,7 +139,7 @@ def start():
 
 
 
-#### This function will run when we add a new user
+# This function will run when we add a new user
 @app.route('/add', methods=['GET', 'POST'])
 def add():
     newusername = request.form['newusername']
@@ -177,6 +174,5 @@ def add():
     return render_template('home.html', names=names, rolls=rolls, times=times, l=l, totalreg=totalreg())
 
 
-#### Our main function which runs the Flask App
 if __name__ == '__main__':
     app.run(debug=True)
